@@ -3,9 +3,15 @@ module SparseMatrix where
 import qualified Data.Vector as V
 import Data.List (foldl')
 
+-- | Defines a container for a sparse column compressed matrix
 type SparseMatrix a =
   -- rows, columns, values, column indices, row pointer
   (Int, Int, V.Vector a, V.Vector Int, V.Vector Int)
+
+type SparseBoolMatrix = (Int, Int, V.Vector Int, V.Vector Int)
+
+boolMatrix :: SparseMatrix a -> SparseBoolMatrix
+boolMatrix (rs, cols, _, cids, rps) = (rs, cols, cids, rps)
 
 emptyMatrix :: Int -> Int -> SparseMatrix a
 emptyMatrix rows columns = (rows, columns, V.empty, V.empty, V.empty)
