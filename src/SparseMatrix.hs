@@ -3,6 +3,8 @@ module SparseMatrix where
 import qualified Data.Vector as V
 import Data.List (foldl')
 
+import Debug.Trace
+
 -- | Defines a container for a sparse column compressed matrix
 type SparseMatrix a =
   -- rows, columns, values, column indices, row pointer
@@ -34,11 +36,11 @@ rp (_, _, _, _, rps) = rps
 -- | Creates a sparse matrix for given generator function, filter,
 --   number of rows and number of columns. A values that pass the filter are
 --   included in the matrix.
-generateMatrix :: (Int -> Int -> a) -> (a -> Bool) -> Int -> Int
+generateMatrix :: Show a => (Int -> Int -> a) -> (a -> Bool) -> Int -> Int
   -> SparseMatrix a
 generateMatrix gen fil rs cols = let
   ijs = [(i, j) | i <- [1 .. rs], j <- [1 .. cols]]
-  vals =  V.fromList (filter fil (map (uncurry gen) ijs))
+  vals = V.fromList (filter fil (map (uncurry gen) ijs))
   cis = V.replicate (V.length vals) 0
   rps = V.replicate rs 0
 
