@@ -14,4 +14,4 @@ main = do
   let grayImage = grayScale image
   let sparse = sparseMatrix grayImage 128
   let matrix = boolMatrix sparse
-  putStrLn (cPlusPlusArray (compressed matrix) "image")
+  putStrLn (cPlusPlusSruct (compressed matrix) "image")

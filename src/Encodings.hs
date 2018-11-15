@@ -33,7 +33,12 @@ compressed (rs, cols, rowColumns) = let
 hexArray :: V.Vector Word8 -> String
 hexArray v = intercalate "," (map (printf "%#x") (V.toList v))
 
-cPlusPlusArray :: CompressedMatrix -> String -> String
-cPlusPlusArray (rows, columns, cids, rps) name = concat
-  ["const uint8_t ", name, "_column_indices [] = { ", hexArray cids, " };\n",
-   "const uint8_t ", name, "_row_pointer [] = {", hexArray rps, " };\n"]
+cPlusPlusStruct :: CompressedMatrix -> String -> String
+cPlusPlusArray (rows, columns, cids, rps) name = let
+  cidName = name ++ "_column_indices"
+  rpName = name ++ "_row_pointer" in concat
+    ["uint8_t ", cidName, " [] = { ", hexArray cids, " };\n",
+      "uint8_t ", rpName, " [] = {", hexArray rps, " };\n",
+      "SparseBoolMatrix ", name, " = { ", show rows, ", ",
+      show columns, ", ", show (V.length rps),
+      ", ", show (V.length cids), ", " , rpName, ", ", cidName, "};"]
