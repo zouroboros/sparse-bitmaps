@@ -1,5 +1,6 @@
 module SparseMatrix where
 
+import Control.Monad (join)
 import qualified Data.Vector as V
 import Data.List (foldl')
 
@@ -7,31 +8,32 @@ import Debug.Trace
 
 -- | Defines a container for a sparse column compressed matrix
 type SparseMatrix a =
-  -- rows, columns, values, column indices, row pointer
-  (Int, Int, V.Vector a, V.Vector Int, V.Vector Int)
+  -- rows, columns, values, row vector
+  (Int, Int, V.Vector a, V.Vector (V.Vector Int))
 
-type SparseBoolMatrix = (Int, Int, V.Vector Int, V.Vector Int)
+type SparseBoolMatrix = (Int, Int, V.Vector (V.Vector Int))
 
 boolMatrix :: SparseMatrix a -> SparseBoolMatrix
-boolMatrix (rs, cols, _, cids, rps) = (rs, cols, cids, rps)
+boolMatrix (rs, cols, _, rc) = (rs, cols, rc)
 
 emptyMatrix :: Int -> Int -> SparseMatrix a
-emptyMatrix rows columns = (rows, columns, V.empty, V.empty, V.empty)
+emptyMatrix rows columns = (rows, columns, V.empty, V.empty)
 
 rows :: SparseMatrix a -> Int
-rows (rows, _, _, _, _) = rows
+rows (rows, _, _, _) = rows
 
 columns :: SparseMatrix a -> Int
-columns (_, columns, _ , _, _) = columns
+columns (_, columns, _ , _) = columns
 
 values :: SparseMatrix a -> V.Vector a
-values (_, _, values, _ , _) = values
+values (_, _, values, _) = values
 
-ci :: SparseMatrix a -> V.Vector Int
-ci (_, _, _, cis, _) = cis
+indices :: SparseMatrix a -> V.Vector (Int, Int)
+indices (_, _, _, rowColumn) = indices' rowColumn
 
-rp :: SparseMatrix a -> V.Vector Int
-rp (_, _, _, _, rps) = rps
+indices' :: V.Vector (V.Vector Int) -> V.Vector (Int, Int)
+indices' rowsColumns = join
+  (V.imap (\i column -> V.map (\j -> (i, j)) column) rowsColumns)
 
 -- | Creates a sparse matrix for given generator function, filter,
 --   number of rows and number of columns. A values that pass the filter are
@@ -39,20 +41,7 @@ rp (_, _, _, _, rps) = rps
 generateMatrix :: Show a => (Int -> Int -> a) -> (a -> Bool) -> Int -> Int
   -> SparseMatrix a
 generateMatrix gen fil rs cols = let
-  ijs = [(i, j) | i <- [1 .. rs], j <- [1 .. cols]]
-  vals = V.fromList (filter fil (map (uncurry gen) ijs))
-  cis = V.replicate (V.length vals) 0
-  rps = V.replicate rs 0
-
-  updateRP vec r i | (V.!) vec r == 0 = (V.//) vec [(r, i)]
-  updateRP vec _ _                    = vec
-
-  updateM (i', cil, m) (i, j)  | not (fil (gen i j)) = (i, cil, m)
-  updateM (i', cil, m) (i, j)  | i == i'
-    = (i, cil + 1, (rs, cols, vals, (V.//) (ci m) [(cil - 1, j)],
-     updateRP (rp m) (i - 1) cil))
-  updateM (i', cil, m) (i, j)
-    = (i, cil + 1, (rs, cols, vals, (V.//) (ci m) [(cil - 1, j)],
-     updateRP (rp m) (i - 1) cil))
-  (_, _, matrix) = foldl' updateM (0, 1, (rs, cols, vals, cis, rps)) ijs
-  in matrix
+  column i = V.fromList (map (fst) (filter (\(j, x) -> fil x) [(j, gen i j) | j <- [1 .. cols]]))
+  rowColumns = V.fromList (map column [1 .. rs])
+  values = V.map (uncurry gen) (indices' rowColumns)
+  in (rs, cols, values, rowColumns)
