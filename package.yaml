@@ -48,3 +48,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - arduino-sparse
+    - hspec >= 2.5

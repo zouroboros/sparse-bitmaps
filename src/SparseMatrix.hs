@@ -28,17 +28,18 @@ columns (_, columns, _ , _) = columns
 values :: SparseMatrix a -> V.Vector a
 values (_, _, values, _) = values
 
+-- | Returns a list of indices that have a value
 indices :: SparseMatrix a -> V.Vector (Int, Int)
 indices (_, _, _, rowColumn) = indices' rowColumn
 
 indices' :: V.Vector (V.Vector Int) -> V.Vector (Int, Int)
 indices' rowsColumns = join
-  (V.imap (\i column -> V.map (\j -> (i, j)) column) rowsColumns)
+  (V.imap (\i column -> V.map (\j -> (i + 1, j)) column) rowsColumns)
 
 -- | Creates a sparse matrix for given generator function, filter,
 --   number of rows and number of columns. A values that pass the filter are
 --   included in the matrix.
-generateMatrix :: Show a => (Int -> Int -> a) -> (a -> Bool) -> Int -> Int
+generateMatrix :: (Int -> Int -> a) -> (a -> Bool) -> Int -> Int
   -> SparseMatrix a
 generateMatrix gen fil rs cols = let
   column i = V.fromList (map (fst) (filter (\(j, x) -> fil x) [(j, gen i j) | j <- [1 .. cols]]))

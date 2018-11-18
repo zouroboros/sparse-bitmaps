@@ -10,15 +10,17 @@ import SparseMatrix
 
 import Debug.Trace
 
-type CompressedMatrix = (Int, Int, V.Vector Word8, V.Vector Word8)
+type CompressedMatrix =
+  -- | rows, columns, cids, rps
+  (Int, Int, V.Vector Word8, V.Vector Word8)
 
 compressV :: V.Vector Int -> V.Vector Word8
 compressV vec = let
-  shifts shift v = (v - shift) `div` 255
-  enc _ v     | v < 255         = [fromIntegral v]
-  enc shift v | v - shift < 255 = [fromIntegral (v - shift)]
-  enc shift v                   = replicate (shifts shift v) 255 ++ [fromIntegral (v - (shifts shift v * 255))]
-  ( _, list) = foldl (\(shift, accum) v -> (shifts shift v, accum ++ enc shift v)) (0, []) (V.toList vec)
+  shifted shift v = v - (shift * 255)
+  shifts v = v `div` 255
+  enc shift v | shifted shift v < 255 = [fromIntegral (shifted shift v)]
+  enc shift v                         = replicate (shifts v - shift) 255 ++ [fromIntegral (shifted (shifts v) v)]
+  ( _, list) = foldl (\(shift, accum) v -> (shifts v, accum ++ enc shift v)) (0, []) (V.toList vec)
   in V.fromList list
 
 -- | Encodes a sparse bool matrix as two byte arrays
@@ -34,7 +36,7 @@ hexArray :: V.Vector Word8 -> String
 hexArray v = intercalate "," (map (printf "%#x") (V.toList v))
 
 cPlusPlusStruct :: CompressedMatrix -> String -> String
-cPlusPlusArray (rows, columns, cids, rps) name = let
+cPlusPlusStruct (rows, columns, cids, rps) name = let
   cidName = name ++ "_column_indices"
   rpName = name ++ "_row_pointer" in concat
     ["uint8_t ", cidName, " [] = { ", hexArray cids, " };\n",
