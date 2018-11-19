@@ -1,4 +1,4 @@
-module SparseMatrix where
+module SparseBitmaps.SparseMatrix where
 
 import Control.Monad (join)
 import qualified Data.Vector as V

@@ -3,9 +3,9 @@ module Main where
 import Codec.Picture
 import System.Environment
 
-import ImageConv
-import SparseMatrix
-import Encodings
+import SparseBitmaps.ImageConv
+import SparseBitmaps.SparseMatrix
+import SparseBitmaps.Formats
 
 main :: IO ()
 main = do

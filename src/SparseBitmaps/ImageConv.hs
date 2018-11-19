@@ -1,9 +1,9 @@
-module ImageConv where
+module SparseBitmaps.ImageConv where
 
 import Data.Word
 import Codec.Picture.Types
 
-import qualified SparseMatrix as S
+import qualified SparseBitmaps.SparseMatrix as S
 
 -- | converts a color image into a grayscale image
 grayScale :: DynamicImage -> Image (PixelBaseComponent Pixel8)

@@ -1,4 +1,4 @@
-module Encodings where
+module SparseBitmaps.Formats where
 
 import Control.Monad
 import Data.Word
@@ -6,7 +6,7 @@ import qualified Data.Vector as V
 import Text.Printf
 import Data.List
 
-import SparseMatrix
+import SparseBitmaps.SparseMatrix
 
 import Debug.Trace
 
